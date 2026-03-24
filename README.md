@@ -1,107 +1,64 @@
-# Sócrates
+# Socrates
 
-Aplicación de escritorio para **docentes**: asistentes con IA que ayudan a elaborar **criterios de evaluación**, **planes de enseñanza**, **adecuaciones curriculares**, **consignas** y otros materiales del año lectivo. Conectada a un proveedor de modelo de lenguaje (LLM) elegido por la usuaria o el usuario.
+Socrates is an open-source desktop assistant for teachers. It helps draft evaluation criteria, lesson plans, tasks, and student adaptations while keeping teachers in full control of review and approval.
 
-## Motivación
+[Leer en español](./README.es.md)
 
-Pensada para situaciones con alta carga docente (por ejemplo, varios turnos y más de 30 alumnos), donde la planificación repetitiva consume tiempo que puede destinarse al aula. La herramienta **empodera** al docente como supervisor: los agentes producen borradores, pero es el docente quien revisa, edita y aprueba.
+## Features
 
-## Arquitectura
+- AI assistants for criteria, planning, adaptations, and tasks
+- Classroom and student context with progressive memory
+- Weekly feedback workflows and reviewable drafts
+- DOCX export for approved documents
+- Local-first desktop architecture
+
+## Architecture
 
 ```
 socrates/
 ├── apps/
 │   ├── desktop/          Electron + React + Tailwind + PGlite/Drizzle
-│   └── agents/           Elixir/Phoenix (orquestación de agentes LLM)
-├── Makefile              Comandos unificados
-└── README.md
+│   └── agents/           Elixir/Phoenix sidecar for agent orchestration
+└── Makefile
 ```
 
-Electron (desktop) se comunica con el sidecar Elixir (agents) por **WebSocket en localhost**. El proceso main de Electron encuentra un puerto libre, levanta el binario Elixir como child process y se conecta a un Phoenix Channel (`agent:lobby`).
+Desktop (Electron) communicates with the Elixir sidecar over localhost WebSocket (`agent:lobby`).
 
-### Capas
+## Requirements
 
-| Capa | Stack | Responsabilidad |
-|------|-------|-----------------|
-| **UI** | React + Tailwind + shadcn/ui | Aulas, alumnos, devoluciones, chat, documentos, configuración |
-| **Datos** | PGlite (Postgres WASM) + Drizzle ORM | Persistencia local: aulas, alumnos, devoluciones semanales, documentos, conversaciones, config LLM |
-| **Agentes** | Elixir/Phoenix + Req | Orquestación, contexto enriquecido, salida JSON para exportación |
-| **Exportación** | `docx` (npm) en el proceso main | Generación de archivos `.docx` locales |
-| **Empaquetado** | electron-builder + Burrito | Un solo instalador por plataforma |
+- Node.js >= 20
+- pnpm
+- Elixir >= 1.15
+- Erlang/OTP >= 25
 
-### Agentes
-
-| Agente | Función |
-|--------|---------|
-| **Criterios** | Genera criterios de evaluación alineados al currículo |
-| **Planificador** | Elabora planes semanales/mensuales |
-| **Adecuación** | Adapta actividades según perfil y evolución de cada alumno |
-| **Consignas** | Crea tareas, actividades y fichas de trabajo |
-
-Los cuatro agentes anteriores responden en **JSON** (`title`, `summary`, `blocks`) para vista previa en pantalla y exportación a Word. Existe además un flujo interno `feedback_summary` para sugerir resúmenes de devolución semanal (siempre revisables por la docente).
-
-## Requisitos
-
-- **Node.js** (>= 20) y [pnpm](https://pnpm.io/)
-- **Elixir** (>= 1.15) y Erlang/OTP (>= 25)
-
-## Setup
+## Quick Start
 
 ```bash
-# Instalar dependencias del desktop
 make install
-
-# Instalar dependencias del sidecar Elixir
 cd apps/agents && mix deps.get && cd ../..
-```
-
-## Desarrollo
-
-```bash
-# Solo desktop (sin sidecar — la app arranca pero los agentes no responden)
-make dev
-
-# Solo sidecar Elixir
-make dev-agents
-
-# Ambos en paralelo
 make dev-all
 ```
 
-## Build y distribución
+## Development Commands
 
 ```bash
-make build          # Compila desktop (main + renderer)
-make build-agents   # Compila release de Elixir
-make dist           # Empaqueta con electron-builder
+make dev         # desktop only
+make dev-agents  # agents sidecar only
+make dev-all     # desktop + sidecar
+make test        # desktop tests
+make test-agents # Elixir tests
+make build       # desktop build
+make build-agents
+make dist
 ```
 
-## Tests
+## Open Source
 
-```bash
-make test           # Tests del desktop (Vitest)
-make test-agents    # Tests del sidecar (ExUnit)
-```
+- License: Apache License 2.0 (`LICENSE`)
+- Contributing guide: `CONTRIBUTING.md`
+- Code of Conduct: `CODE_OF_CONDUCT.md`
+- Security policy: `SECURITY.md`
 
-## Modelo de datos (resumen)
+## License
 
-- `teachers`, `classrooms`, `students` — estructura de aula
-- `student_profiles`, `learning_notes` — perfil y observaciones por alumno
-- `weekly_feedback` — devolución semanal por alumno (indicadores, observaciones, resumen IA, aprobación docente)
-- `documents`, `document_versions` — documentos aprobados por la docente
-- `conversations`, `messages` — historial de chat con los agentes
-- `llm_config` — proveedor, modelo, API key
-
-## Estado actual
-
-- Monorepo con desktop (Electron + React) y agents (Elixir/Phoenix).
-- PGlite + Drizzle con esquema ampliado (incluye `weekly_feedback`).
-- UI: **Mis aulas**, **Devoluciones**, **Asistentes** (contexto de aula/alumnos), **Documentos**, **Configuración**.
-- Sidecar con `ContextBuilder`: perfiles, notas y devoluciones recientes inyectadas en el system prompt.
-- Llamadas reales al LLM (OpenAI / OpenRouter compatible) desde Elixir.
-- Aprobación de borradores → tabla `documents` + nota opcional en ficha del alumno + exportación **DOCX**.
-
-## Licencia
-
-MIT.
-# Socrates
+Apache-2.0
