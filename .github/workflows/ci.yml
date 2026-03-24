@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop-tests:
+    name: Desktop (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+
+      - name: Install desktop dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: apps/desktop
+
+      - name: Run Vitest
+        run: pnpm test --run
+        working-directory: apps/desktop
+
+  agents-tests:
+    name: Agents (Elixir)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup BEAM
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.15.8"
+          otp-version: "26.2"
+
+      - name: Cache deps and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/agents/deps
+            apps/agents/_build
+          key: ${{ runner.os }}-mix-${{ hashFiles('apps/agents/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+
+      - name: Install dependencies
+        run: mix deps.get
+        working-directory: apps/agents
+
+      - name: Compile
+        run: mix compile --warnings-as-errors
+        working-directory: apps/agents
+
+      - name: Run ExUnit
+        run: mix test
+        working-directory: apps/agents
