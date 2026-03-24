@@ -1,0 +1,23 @@
+node_modules/
+dist/
+out/
+release/
+.env
+*.log
+
+# PGlite data
+pgdata/
+
+# Elixir
+apps/agents/_build/
+apps/agents/deps/
+apps/agents/.elixir_ls/
+apps/agents/*.ez
+apps/agents/erl_crash.dump
+
+# Burrito
+apps/agents/burrito_out/
+
+# OS
+.DS_Store
+Thumbs.db
