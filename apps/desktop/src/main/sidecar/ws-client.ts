@@ -120,6 +120,25 @@ export class SocratesWSClient {
     });
   }
 
+  async sendVerifyAndWait(content: string, context: Record<string, unknown> = {}): Promise<string> {
+    const requestId = `req_${Date.now()}_${this.refCounter}`;
+
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pendingRequests.delete(requestId);
+        reject(new Error("Timeout esperando respuesta del agente"));
+      }, REQUEST_TIMEOUT);
+
+      this.pendingRequests.set(requestId, { resolve, reject, timer });
+
+      this.send("agent:lobby", "verify", {
+        content,
+        context,
+        requestId,
+      });
+    });
+  }
+
   async configureLlm(config: Record<string, unknown>): Promise<void> {
     this.send("agent:lobby", "configure_llm", config);
   }
