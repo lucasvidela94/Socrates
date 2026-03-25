@@ -125,3 +125,83 @@ export const llmConfig = pgTable("llm_config", {
   isDefault: boolean("is_default").default(false),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
+
+export const materials = pgTable("materials", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  classroomId: uuid("classroom_id")
+    .notNull()
+    .references(() => classrooms.id, { onDelete: "cascade" }),
+  teacherId: uuid("teacher_id")
+    .notNull()
+    .references(() => teachers.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(),
+  mimeType: text("mime_type").notNull(),
+  fileSizeBytes: integer("file_size_bytes"),
+  subject: text("subject"),
+  status: text("status").default("pending").notNull(),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const materialChunks = pgTable("material_chunks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  materialId: uuid("material_id")
+    .notNull()
+    .references(() => materials.id, { onDelete: "cascade" }),
+  chunkIndex: integer("chunk_index").notNull(),
+  content: text("content").notNull(),
+  tokenEstimate: integer("token_estimate"),
+  pageNumber: integer("page_number"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const curricula = pgTable("curricula", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  classroomId: uuid("classroom_id")
+    .notNull()
+    .references(() => classrooms.id, { onDelete: "cascade" })
+    .unique(),
+  teacherId: uuid("teacher_id")
+    .notNull()
+    .references(() => teachers.id, { onDelete: "cascade" }),
+  title: text("title").notNull().default(""),
+  year: integer("year"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const curriculumSubjects = pgTable("curriculum_subjects", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  curriculumId: uuid("curriculum_id")
+    .notNull()
+    .references(() => curricula.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0)
+});
+
+export const curriculumUnits = pgTable("curriculum_units", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  subjectId: uuid("subject_id")
+    .notNull()
+    .references(() => curriculumSubjects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  objectives: text("objectives"),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  status: text("status").notNull().default("upcoming"),
+  sortOrder: integer("sort_order").notNull().default(0)
+});
+
+export const curriculumTopics = pgTable("curriculum_topics", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  unitId: uuid("unit_id")
+    .notNull()
+    .references(() => curriculumUnits.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  sortOrder: integer("sort_order").notNull().default(0)
+});

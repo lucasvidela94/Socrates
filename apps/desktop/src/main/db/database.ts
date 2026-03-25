@@ -127,6 +127,70 @@ const runMigrations = async (pg: PGlite): Promise<void> => {
       created_at TIMESTAMP DEFAULT NOW() NOT NULL,
       UNIQUE(student_id, classroom_id, week_start)
     );
+
+    CREATE TABLE IF NOT EXISTS materials (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      classroom_id UUID NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+      teacher_id UUID NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      file_size_bytes INTEGER,
+      subject TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error_message TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS material_chunks (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      material_id UUID NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+      chunk_index INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      token_estimate INTEGER,
+      page_number INTEGER,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS curricula (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      classroom_id UUID NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+      teacher_id UUID NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
+      title TEXT NOT NULL DEFAULT '',
+      year INTEGER,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      UNIQUE(classroom_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS curriculum_subjects (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      curriculum_id UUID NOT NULL REFERENCES curricula(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS curriculum_units (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      subject_id UUID NOT NULL REFERENCES curriculum_subjects(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      objectives TEXT,
+      start_date DATE,
+      end_date DATE,
+      status TEXT NOT NULL DEFAULT 'upcoming',
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS curriculum_topics (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      unit_id UUID NOT NULL REFERENCES curriculum_units(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
   `);
 };
 
