@@ -41,6 +41,33 @@ defmodule SocratesAgentsWeb.AgentChannel do
   end
 
   @impl true
+  def handle_in("verify", payload, socket) do
+    context = Map.get(payload, "context", %{})
+    content = Map.get(payload, "content", "")
+    request_id = Map.get(payload, "requestId")
+
+    Task.start(fn ->
+      case Orchestrator.dispatch("content_review", content, context) do
+        {:ok, response} ->
+          push(socket, "response", %{
+            content: response,
+            agentType: "content_review",
+            requestId: request_id
+          })
+
+        {:error, reason} ->
+          push(socket, "error", %{
+            reason: reason,
+            agentType: "content_review",
+            requestId: request_id
+          })
+      end
+    end)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_in("configure_llm", payload, socket) do
     socket = assign(socket, :llm_config, payload)
     {:reply, {:ok, %{status: "configured"}}, socket}

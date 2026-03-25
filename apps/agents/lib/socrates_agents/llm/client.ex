@@ -35,7 +35,7 @@ defmodule SocratesAgents.LLM.Client do
         "model" => model,
         "messages" => all_messages,
         "temperature" => 0.7,
-        "max_tokens" => 4096
+        "max_tokens" => 8192
       })
 
     case Req.post(url, body: body, headers: headers, receive_timeout: 120_000) do

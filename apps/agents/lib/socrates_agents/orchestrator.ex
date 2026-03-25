@@ -9,7 +9,9 @@ defmodule SocratesAgents.Orchestrator do
     PlannerAgent,
     AdaptationAgent,
     TaskAgent,
-    FeedbackSummaryAgent
+    FeedbackSummaryAgent,
+    CurriculumParserAgent,
+    ContentReviewerAgent
   }
 
   @type agent_type :: String.t()
@@ -23,6 +25,8 @@ defmodule SocratesAgents.Orchestrator do
       "adaptation" -> AdaptationAgent.run(message, context)
       "tasks" -> TaskAgent.run(message, context)
       "feedback_summary" -> FeedbackSummaryAgent.run(message, context)
+      "curriculum_parser" -> CurriculumParserAgent.run(message, context)
+      "content_review" -> ContentReviewerAgent.run(message, context)
       unknown -> {:error, "Unknown agent type: #{unknown}"}
     end
   end
