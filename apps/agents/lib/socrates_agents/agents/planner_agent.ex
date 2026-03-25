@@ -27,7 +27,7 @@ defmodule SocratesAgents.Agents.PlannerAgent do
 
     Siempre respondé en español. El docente revisa y aprueba todo antes de usarlo.
 
-    #{json_contract()}
+    #{output_format()}
     """
   end
 
@@ -44,12 +44,14 @@ defmodule SocratesAgents.Agents.PlannerAgent do
     end
   end
 
-  defp json_contract do
+  defp output_format do
     """
-    FORMATO DE SALIDA (obligatorio): respondé SOLO con un JSON válido UTF-8, sin markdown ni texto fuera del JSON.
-    Estructura: {"title":"string","summary":"string","blocks":[{"type":"heading"|"paragraph","text":"string"}]}
-    El contenido pedagógico principal va en blocks. summary es un párrafo breve para la docente.
-    Si falta información, indicá en summary qué datos concretos pedirías.
+    FORMATO DE SALIDA: Respondé en Markdown claro y directo.
+    Usá # para el título principal, ## para secciones, ### para subsecciones.
+    Usá listas con - para indicadores o ítems.
+    Usá **negrita** para énfasis.
+    NO respondas en JSON ni uses bloques de código.
+    Si falta información, indicalo al inicio del texto.
     """
   end
 end
