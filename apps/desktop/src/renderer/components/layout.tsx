@@ -14,9 +14,12 @@ export const Layout = (): ReactElement => {
     <SidebarProvider defaultOpen={true}>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="h-4" />
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/80 bg-background/95 px-4 backdrop-blur-sm supports-backdrop-filter:bg-background/80">
+          <SidebarTrigger
+            className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Abrir o cerrar el menú lateral"
+          />
+          <Separator orientation="vertical" className="h-4 bg-border/80" />
         </header>
         <main className="flex-1 p-6">
           <Outlet />
