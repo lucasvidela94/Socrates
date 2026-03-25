@@ -7,6 +7,9 @@ export const ROUTES = {
   DOCUMENTS: "/documents",
 } as const;
 
+export const classroomCurriculumPath = (classroomId: string): string =>
+  `${ROUTES.CLASSROOMS}/${classroomId}/curriculum`;
+
 export const ROUTE_LABELS: Record<string, string> = {
   [ROUTES.HOME]: "Inicio",
   [ROUTES.CHAT]: "Asistentes",

@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ROUTES } from "@shared/lib/routes";
+import { ROUTES, classroomCurriculumPath } from "@shared/lib/routes";
 import { useClassroomStore } from "@/stores/classroom-store";
 import type { ClassroomRow, StudentInput } from "@shared/types";
-import { ArrowLeft, Trash2, UserPlus, Users } from "lucide-react";
+import { ArrowLeft, BookMarked, Trash2, UserPlus, Users } from "lucide-react";
+import { MaterialsPanel } from "../../materials";
 
 export const ClassroomDetailPage = (): ReactElement => {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -123,6 +124,29 @@ export const ClassroomDetailPage = (): ReactElement => {
               Agregar
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-8">
+        <CardContent className="pt-6">
+          <MaterialsPanel classroomId={classroomId} />
+        </CardContent>
+      </Card>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <BookMarked className="h-4 w-4" />
+            Programa anual
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground flex-1 min-w-[200px]">
+            Definí materias, unidades y temas para alinear los asistentes al curso.
+          </p>
+          <Button asChild variant="outline" size="sm">
+            <Link to={classroomCurriculumPath(classroomId)}>Gestionar programa</Link>
+          </Button>
         </CardContent>
       </Card>
 

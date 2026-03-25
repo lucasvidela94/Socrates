@@ -10,6 +10,7 @@ import { ClassroomDetailPage } from "@/features/classrooms/pages/classroom-detai
 import { StudentDetailPage } from "@/features/classrooms/pages/student-detail-page";
 import { FeedbackPage } from "@/features/feedback/pages/feedback-page";
 import { DocumentsPage } from "@/features/documents/pages/documents-page";
+import { CurriculumPage } from "@/features/curriculum";
 import { ErrorBoundary } from "@/shared/components/error-boundary";
 
 import type { ReactElement } from "react";
@@ -27,6 +28,7 @@ export const App = (): ReactElement => {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="classrooms" element={<ClassroomsPage />} />
               <Route path="classrooms/:classroomId" element={<ClassroomDetailPage />} />
+              <Route path="classrooms/:classroomId/curriculum" element={<CurriculumPage />} />
               <Route
                 path="classrooms/:classroomId/students/:studentId"
                 element={<StudentDetailPage />}
