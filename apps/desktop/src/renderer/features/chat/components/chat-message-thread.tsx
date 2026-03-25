@@ -11,6 +11,9 @@ interface ChatMessageThreadProps {
   sending: boolean;
   agentType: ChatAgentId;
   onApproveMessage: (msg: MessageRow) => void;
+  onMessageReplace: (msg: MessageRow) => void;
+  conversationId: string | null;
+  chatContext: Record<string, unknown> | undefined;
   error: string | null;
 }
 
@@ -19,6 +22,9 @@ export const ChatMessageThread = ({
   sending,
   agentType,
   onApproveMessage,
+  onMessageReplace,
+  conversationId,
+  chatContext,
   error,
 }: ChatMessageThreadProps): ReactElement => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -59,7 +65,12 @@ export const ChatMessageThread = ({
               {msg.role === "user" ? (
                 <span className="whitespace-pre-wrap">{msg.content}</span>
               ) : (
-                <ChatAssistantBody content={msg.content} messageId={msg.id} />
+                <ChatAssistantBody
+                  message={msg}
+                  conversationId={conversationId}
+                  chatContext={chatContext}
+                  onMessageReplace={onMessageReplace}
+                />
               )}
             </div>
             {msg.role === "assistant" && (

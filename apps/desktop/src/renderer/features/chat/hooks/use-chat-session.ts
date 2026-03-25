@@ -1,5 +1,5 @@
 import { useCallback, useReducer, useRef } from "react";
-import type { ConversationRow } from "@shared/types";
+import type { ConversationRow, MessageRow } from "@shared/types";
 import type { ChatAgentId } from "../lib/chat-agents";
 import {
   chatSessionInitialState,
@@ -12,6 +12,7 @@ export interface UseChatSessionResult {
   setInput: (v: string) => void;
   changeAgent: (id: ChatAgentId) => void;
   send: (chatContext: Record<string, unknown> | undefined) => Promise<void>;
+  replaceMessage: (row: MessageRow) => void;
   reportError: (message: string) => void;
   clearError: () => void;
 }
@@ -88,5 +89,9 @@ export const useChatSession = (): UseChatSessionResult => {
     dispatch({ type: "CLEAR_ERROR" });
   }, []);
 
-  return { state, setInput, changeAgent, send, reportError, clearError };
+  const replaceMessage = useCallback((row: MessageRow) => {
+    dispatch({ type: "MESSAGE_REPLACE", payload: row });
+  }, []);
+
+  return { state, setInput, changeAgent, send, replaceMessage, reportError, clearError };
 };

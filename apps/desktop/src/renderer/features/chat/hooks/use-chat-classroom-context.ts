@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useClassroomStore } from "@/stores/classroom-store";
-import type { ClassroomRow, StudentRow } from "@shared/types";
+import type { ClassroomRow, CurriculumChatSummary, StudentRow } from "@shared/types";
 
 const NONE = "__none";
 
@@ -17,6 +17,8 @@ export interface ChatClassroomContextValue {
   toggleStudent: (id: string) => void;
   chatContext: Record<string, unknown> | undefined;
   noneSentinel: typeof NONE;
+  materialsCount: number;
+  curriculumSummary: CurriculumChatSummary | null;
 }
 
 export const useChatClassroomContext = (): ChatClassroomContextValue => {
@@ -29,6 +31,8 @@ export const useChatClassroomContext = (): ChatClassroomContextValue => {
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [omitStudents, setOmitStudents] = useState(false);
   const [filterStudentsEnabled, setFilterStudentsEnabled] = useState(false);
+  const [materialsCount, setMaterialsCount] = useState(0);
+  const [curriculumSummary, setCurriculumSummary] = useState<CurriculumChatSummary | null>(null);
 
   useEffect(() => {
     void fetchClassrooms();
@@ -38,6 +42,29 @@ export const useChatClassroomContext = (): ChatClassroomContextValue => {
     setSelectedStudentIds(new Set(students.map((s) => s.id)));
     setFilterStudentsEnabled(false);
   }, [students]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (classroomId === "") {
+        if (!cancelled) {
+          setMaterialsCount(0);
+          setCurriculumSummary(null);
+        }
+        return;
+      }
+      const rows = await window.electronAPI.materialsList(classroomId);
+      const cur = await window.electronAPI.curriculumChatSummary(classroomId);
+      if (!cancelled) {
+        setMaterialsCount(rows.filter((row) => row.status === "ready").length);
+        setCurriculumSummary(cur);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [classroomId]);
 
   const setClassroomId = useCallback(
     (id: string) => {
@@ -76,5 +103,7 @@ export const useChatClassroomContext = (): ChatClassroomContextValue => {
     toggleStudent,
     chatContext,
     noneSentinel: NONE,
+    materialsCount,
+    curriculumSummary,
   };
 };

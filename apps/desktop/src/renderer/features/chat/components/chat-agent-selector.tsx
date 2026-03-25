@@ -15,7 +15,7 @@ interface ChatAgentSelectorProps {
 
 export const ChatAgentSelector = ({ value, onChange }: ChatAgentSelectorProps): ReactElement => {
   return (
-    <div className="mb-4">
+    <div>
       <Select
         value={value}
         onValueChange={(v) => onChange(v as ChatAgentId)}

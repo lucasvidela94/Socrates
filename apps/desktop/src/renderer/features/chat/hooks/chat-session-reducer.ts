@@ -20,6 +20,7 @@ export type ChatSessionAction =
     }
   | { type: "SEND_START" }
   | { type: "SEND_DONE" }
+  | { type: "MESSAGE_REPLACE"; payload: MessageRow }
   | { type: "ERROR"; payload: string }
   | { type: "CLEAR_ERROR" };
 
@@ -62,6 +63,13 @@ export const chatSessionReducer = (
       };
     case "SEND_DONE":
       return { ...state, sending: false };
+    case "MESSAGE_REPLACE":
+      return {
+        ...state,
+        messages: state.messages.map((m) =>
+          m.id === action.payload.id ? action.payload : m
+        ),
+      };
     case "ERROR":
       return { ...state, sending: false, error: action.payload };
     case "CLEAR_ERROR":

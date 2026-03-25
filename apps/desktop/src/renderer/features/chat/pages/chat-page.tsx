@@ -9,7 +9,7 @@ import { useChatClassroomContext } from "../hooks/use-chat-classroom-context";
 import { useChatSession } from "../hooks/use-chat-session";
 import { useChatDocumentApproval } from "../hooks/use-chat-document-approval";
 import { ChatAgentSelector } from "../components/chat-agent-selector";
-import { ChatContextCard } from "../components/chat-context-card";
+import { ChatContextSettingsModal } from "../components/chat-context-settings-modal";
 import { ChatMessageThread } from "../components/chat-message-thread";
 import { ChatComposer } from "../components/chat-composer";
 import { ChatApprovalPanel } from "../components/chat-approval-panel";
@@ -22,6 +22,7 @@ export const ChatPage = (): ReactElement => {
     setInput,
     changeAgent,
     send,
+    replaceMessage,
     reportError,
     clearError,
   } = useChatSession();
@@ -83,28 +84,34 @@ export const ChatPage = (): ReactElement => {
         description="Borradores con contexto de tus aulas. Vos aprobás y guardás lo que sirve."
       />
 
-      <ChatContextCard
-        classrooms={classroomCtx.classrooms}
-        classroomId={classroomCtx.classroomId}
-        onClassroomIdChange={classroomCtx.setClassroomId}
-        noneSentinel={classroomCtx.noneSentinel}
-        students={classroomCtx.students}
-        omitStudents={classroomCtx.omitStudents}
-        onOmitStudentsChange={classroomCtx.setOmitStudents}
-        filterStudentsEnabled={classroomCtx.filterStudentsEnabled}
-        onFilterStudentsEnabledChange={classroomCtx.setFilterStudentsEnabled}
-        selectedStudentIds={classroomCtx.selectedStudentIds}
-        onToggleStudent={classroomCtx.toggleStudent}
-      />
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <ChatAgentSelector value={state.agentType} onChange={handleAgentChange} />
+        <ChatContextSettingsModal
+          classrooms={classroomCtx.classrooms}
+          classroomId={classroomCtx.classroomId}
+          onClassroomIdChange={classroomCtx.setClassroomId}
+          noneSentinel={classroomCtx.noneSentinel}
+          students={classroomCtx.students}
+          omitStudents={classroomCtx.omitStudents}
+          onOmitStudentsChange={classroomCtx.setOmitStudents}
+          filterStudentsEnabled={classroomCtx.filterStudentsEnabled}
+          onFilterStudentsEnabledChange={classroomCtx.setFilterStudentsEnabled}
+          selectedStudentIds={classroomCtx.selectedStudentIds}
+          onToggleStudent={classroomCtx.toggleStudent}
+          materialsCount={classroomCtx.materialsCount}
+          curriculumSummary={classroomCtx.curriculumSummary}
+        />
+      </div>
 
-      <ChatAgentSelector value={state.agentType} onChange={handleAgentChange} />
-
-      <Card className="flex flex-col h-[calc(100vh-28rem)] min-h-[280px]">
+      <Card className="flex h-[calc(100vh-13rem)] min-h-[min(60vh,520px)] flex-col">
         <ChatMessageThread
           messages={state.messages}
           sending={state.sending}
           agentType={state.agentType}
           onApproveMessage={openForMessage}
+          onMessageReplace={replaceMessage}
+          conversationId={state.conversation?.id ?? null}
+          chatContext={classroomCtx.chatContext}
           error={state.error}
         />
         <ChatComposer
