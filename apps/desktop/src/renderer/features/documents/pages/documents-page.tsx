@@ -36,10 +36,7 @@ export const DocumentsPage = (): ReactElement => {
   return (
     <PageContainer>
       <Breadcrumb items={BREADCRUMB_MAP[ROUTES.DOCUMENTS]} />
-      <PageHeader
-        title="Documentos guardados"
-        description="Materiales revisados y guardados por vos, listos para usar o descargar."
-      />
+      <PageHeader title="Documentos" description="Exportá a DOCX cuando los necesites." />
 
       <ul className="divide-y rounded-md border">
         {docs.map((d) => (

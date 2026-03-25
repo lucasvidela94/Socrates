@@ -9,6 +9,7 @@ import { ClassroomsPage } from "@/features/classrooms/pages/classrooms-page";
 import { ClassroomDetailPage } from "@/features/classrooms/pages/classroom-detail-page";
 import { StudentDetailPage } from "@/features/classrooms/pages/student-detail-page";
 import { FeedbackPage } from "@/features/feedback/pages/feedback-page";
+import { FeedbackStudentPage } from "@/features/feedback/pages/feedback-student-page";
 import { DocumentsPage } from "@/features/documents/pages/documents-page";
 import { CurriculumPage } from "@/features/curriculum";
 import { ErrorBoundary } from "@/shared/components/error-boundary";
@@ -33,6 +34,11 @@ export const App = (): ReactElement => {
                 path="classrooms/:classroomId/students/:studentId"
                 element={<StudentDetailPage />}
               />
+              <Route
+                path="classrooms/:classroomId/feedback/students/:studentId"
+                element={<FeedbackStudentPage />}
+              />
+              <Route path="classrooms/:classroomId/feedback" element={<FeedbackPage />} />
               <Route path="feedback" element={<FeedbackPage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

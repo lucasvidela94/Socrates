@@ -1,7 +1,5 @@
 defmodule SocratesAgents.Agents.CurriculumParserAgent do
-  @behaviour SocratesAgents.Agents.AgentBehaviour
-
-  alias SocratesAgents.LLM.Client
+  use SocratesAgents.Agents.AgentBase, id: "curriculum_parser", use_context: false
 
   @impl true
   def name, do: "Parser de programa (interno)"
@@ -23,17 +21,5 @@ defmodule SocratesAgents.Agents.CurriculumParserAgent do
     - topics es siempre un array de strings (nombres de temas). Si no hay temas explícitos, usá [] o un tema genérico por unidad.
     - No inventes instituciones ni datos personales; solo reorganizá el contenido dado.
     """
-  end
-
-  @impl true
-  def run(message, context) do
-    llm_config = Map.get(context, "llm_config")
-
-    if is_nil(llm_config) or is_nil(Map.get(llm_config, "api_key")) do
-      {:error, "No hay configuración de LLM. Configurá tu proveedor en Ajustes."}
-    else
-      messages = [%{"role" => "user", "content" => message}]
-      Client.chat_completion(llm_config, system_prompt(), messages)
-    end
   end
 end

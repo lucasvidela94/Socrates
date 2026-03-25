@@ -15,10 +15,7 @@ export const SettingsPage = (): ReactElement => {
   return (
     <PageContainer>
       <Breadcrumb items={BREADCRUMB_MAP[ROUTES.SETTINGS]} />
-      <PageHeader
-        title="Conexión de IA"
-        description="Conectá un servicio de IA para que los asistentes funcionen."
-      />
+      <PageHeader title="Conexión de IA" description="Modelo y credenciales para los asistentes." />
 
       <ConnectionStatusCard
         connection={c.connection}

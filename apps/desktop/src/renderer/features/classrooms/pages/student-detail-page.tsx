@@ -16,7 +16,7 @@ import type {
   StudentProfileInput,
   StudentWithProfile,
 } from "@shared/types";
-import { ArrowLeft, Save, StickyNote, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, Save, StickyNote, Trash2 } from "lucide-react";
 
 export const StudentDetailPage = (): ReactElement => {
   const { classroomId, studentId } = useParams<{
@@ -130,12 +130,12 @@ export const StudentDetailPage = (): ReactElement => {
       </div>
       <PageHeader
         title={data.student.name}
-        description="Perfil de aprendizaje y notas que alimentan a los asistentes."
+        description={`${classroom.grade} · ${classroom.shift}`}
       />
 
       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">Perfil de aprendizaje</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Perfil</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1 sm:col-span-2">
@@ -170,58 +170,59 @@ export const StudentDetailPage = (): ReactElement => {
         </CardContent>
       </Card>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <StickyNote className="h-4 w-4" />
-            Nueva nota de aprendizaje
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-4">
-            <div className="space-y-1 sm:col-span-1">
-              <Label htmlFor="ncat">Categoría</Label>
-              <Input
-                id="ncat"
-                value={noteCat}
-                onChange={(e) => setNoteCat(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1 sm:col-span-3">
-              <Label htmlFor="nobs">Observación</Label>
-              <Input
-                id="nobs"
-                value={noteObs}
-                onChange={(e) => setNoteObs(e.target.value)}
-                placeholder="Lo que observaste en clase..."
-              />
-            </div>
-          </div>
-          <Button onClick={handleAddNote} disabled={noteObs.trim() === ""}>
-            Agregar nota
-          </Button>
-        </CardContent>
-      </Card>
-
-      <div>
-        <h2 className="text-sm font-medium mb-2">Historial</h2>
-        <ul className="space-y-2">
-          {notes.map((n) => (
-            <li
-              key={n.id}
-              className="rounded-md border px-3 py-2 text-sm"
-            >
-              <span className="text-xs text-muted-foreground">{n.category}</span>
-              <p className="mt-1">{n.observation}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {new Date(n.createdAt).toLocaleString()}
-              </p>
-            </li>
-          ))}
-        </ul>
-        {notes.length === 0 && (
-          <p className="text-sm text-muted-foreground">Sin notas todavía.</p>
+      <div className="mb-6">
+        <h2 className="mb-2 text-sm font-medium">Notas</h2>
+        {notes.length > 0 ? (
+          <ul className="mb-4 space-y-2">
+            {notes.map((n) => (
+              <li
+                key={n.id}
+                className="rounded-md border px-3 py-2 text-sm"
+              >
+                <span className="text-xs text-muted-foreground">{n.category}</span>
+                <p className="mt-1">{n.observation}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {new Date(n.createdAt).toLocaleString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mb-4 text-sm text-muted-foreground">Sin notas todavía.</p>
         )}
+        <details className="group mt-4 rounded-lg border border-border/80 bg-card/30 [&[open]_summary_svg]:rotate-180">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium [&::-webkit-details-marker]:hidden">
+            <span className="inline-flex items-center gap-2">
+              <StickyNote className="h-4 w-4 text-muted-foreground" aria-hidden />
+              Agregar nota
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+          </summary>
+          <div className="space-y-3 border-t border-border/60 px-3 py-4">
+            <div className="grid gap-2 sm:grid-cols-4">
+              <div className="space-y-1 sm:col-span-1">
+                <Label htmlFor="ncat">Categoría</Label>
+                <Input
+                  id="ncat"
+                  value={noteCat}
+                  onChange={(e) => setNoteCat(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1 sm:col-span-3">
+                <Label htmlFor="nobs">Observación</Label>
+                <Input
+                  id="nobs"
+                  value={noteObs}
+                  onChange={(e) => setNoteObs(e.target.value)}
+                  placeholder="Observación en clase…"
+                />
+              </div>
+            </div>
+            <Button onClick={handleAddNote} disabled={noteObs.trim() === ""}>
+              Guardar nota
+            </Button>
+          </div>
+        </details>
       </div>
     </PageContainer>
   );

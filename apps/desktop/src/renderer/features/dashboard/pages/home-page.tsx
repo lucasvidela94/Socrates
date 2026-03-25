@@ -16,10 +16,7 @@ export const HomePage = (): ReactElement => {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Sócrates"
-        description="Tu asistente docente para preparar clases, actividades y seguimiento de alumnos."
-      />
+      <PageHeader title="Sócrates" description="Asistente docente para planificación y seguimiento." />
 
       {version !== null && (
         <p className="text-sm text-muted-foreground mb-6">Versión {version}</p>

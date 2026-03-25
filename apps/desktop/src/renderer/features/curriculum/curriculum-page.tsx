@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ROUTES, classroomCurriculumPath } from "@shared/lib/routes";
+import { ROUTES } from "@shared/lib/routes";
 import { useClassroomStore } from "@/stores/classroom-store";
 import type {
   CurriculumTree,
@@ -15,7 +15,7 @@ import type {
   CurriculumUnitNode,
   CurriculumTopicNode,
 } from "@shared/types";
-import { ArrowLeft, BookMarked, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, BookMarked, ChevronDown, Plus, Trash2, Upload } from "lucide-react";
 
 function dateInputValue(d: string | Date | null | undefined): string {
   if (d === null || d === undefined) return "";
@@ -301,7 +301,7 @@ export const CurriculumPage = (): ReactElement => {
     { label: "Inicio", href: `#${ROUTES.HOME}` },
     { label: "Mis aulas", href: `#${ROUTES.CLASSROOMS}` },
     { label: classroom.name, href: `#${ROUTES.CLASSROOMS}/${classroomId}` },
-    { label: "Programa anual" },
+    { label: "Programa" },
   ];
 
   const handleCreate = async () => {
@@ -364,8 +364,8 @@ export const CurriculumPage = (): ReactElement => {
   return (
     <PageContainer>
       <Breadcrumb items={crumbs} />
-      <div className="mb-4 flex flex-wrap gap-2">
-        <Button asChild variant="ghost" size="sm">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link to={`${ROUTES.CLASSROOMS}/${classroomId}`}>
             <ArrowLeft className="h-4 w-4" />
             Aula
@@ -374,41 +374,53 @@ export const CurriculumPage = (): ReactElement => {
       </div>
       <PageHeader
         title="Programa anual"
-        description={`${classroom.name} · ${classroom.grade}`}
+        description={`${classroom.grade} · ${classroom.shift}`}
       />
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
       ) : tree === null ? (
         <Card className="max-w-lg">
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <BookMarked className="h-4 w-4" />
               Crear programa
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-1">
-              <Label>Título</Label>
-              <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ej. 2025" />
-            </div>
-            <div className="space-y-1">
-              <Label>Año</Label>
-              <Input value={newYear} onChange={(e) => setNewYear(e.target.value)} type="number" />
-            </div>
-            <div className="space-y-1">
-              <Label>Descripción (opcional)</Label>
-              <textarea
-                className="w-full min-h-[72px] text-sm rounded-md border border-input bg-background px-2 py-1.5"
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-              />
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1 sm:col-span-2">
+                <Label>Título</Label>
+                <Input
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Ej. Ciclo 2026"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Año</Label>
+                <Input value={newYear} onChange={(e) => setNewYear(e.target.value)} type="number" />
+              </div>
             </div>
             <Button type="button" onClick={() => void handleCreate()}>
               Crear programa vacío
             </Button>
-            <div className="pt-2 border-t">
-              <Button type="button" variant="outline" onClick={() => setImportOpen(true)}>
+            <details className="group rounded-lg border border-border/60 bg-muted/20 [&[open]_summary_svg]:rotate-180">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm text-muted-foreground [&::-webkit-details-marker]:hidden">
+                <span>Descripción (opcional)</span>
+                <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+              </summary>
+              <div className="border-t border-border/60 p-3">
+                <textarea
+                  className="w-full min-h-[64px] text-sm rounded-md border border-input bg-background px-2 py-1.5"
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  placeholder="Notas internas sobre el programa…"
+                />
+              </div>
+            </details>
+            <div className="border-t pt-4">
+              <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />
                 Importar desde texto
               </Button>
@@ -420,18 +432,18 @@ export const CurriculumPage = (): ReactElement => {
           <Card>
             <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-2">
               <CardTitle className="text-base">Datos del programa</CardTitle>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
                   <Upload className="h-4 w-4 mr-1" />
                   Importar
                 </Button>
                 <Button type="button" variant="destructive" size="sm" onClick={() => void deleteProgram()}>
-                  Eliminar programa
+                  Eliminar
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-3 items-end">
-              <div className="space-y-1 min-w-[160px]">
+              <div className="space-y-1 min-w-[160px] flex-1">
                 <Label className="text-xs">Título</Label>
                 <Input className="h-8" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
               </div>
@@ -444,18 +456,19 @@ export const CurriculumPage = (): ReactElement => {
               </Button>
             </CardContent>
             <CardContent className="pt-0">
-              <Label className="text-xs">Descripción</Label>
+              <Label className="text-xs text-muted-foreground">Descripción</Label>
               <textarea
-                className="w-full min-h-[64px] text-sm rounded-md border border-input bg-background px-2 py-1.5 mt-1"
+                className="w-full min-h-[56px] text-sm rounded-md border border-input bg-background px-2 py-1.5 mt-1"
                 value={metaDesc}
                 onChange={(e) => setMetaDesc(e.target.value)}
                 onBlur={() => void saveCurriculumMeta()}
+                placeholder="Opcional"
               />
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium">Materias y unidades</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-medium">Materias</h2>
             <Button type="button" size="sm" variant="outline" onClick={() => void addSubject()}>
               <Plus className="h-4 w-4 mr-1" />
               Materia

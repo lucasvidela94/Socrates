@@ -1,8 +1,5 @@
 defmodule SocratesAgents.Agents.ContentReviewerAgent do
-  @behaviour SocratesAgents.Agents.AgentBehaviour
-
-  alias SocratesAgents.ContextBuilder
-  alias SocratesAgents.LLM.Client
+  use SocratesAgents.Agents.AgentBase, id: "content_review", use_context: true
 
   @impl true
   def name, do: "Verificación de contenido (interno)"
@@ -34,15 +31,7 @@ defmodule SocratesAgents.Agents.ContentReviewerAgent do
 
   @impl true
   def run(message, context) do
-    llm_config = Map.get(context, "llm_config")
-
-    if is_nil(llm_config) or is_nil(Map.get(llm_config, "api_key")) do
-      {:error, "No hay configuración de LLM. Configurá tu proveedor en Ajustes."}
-    else
-      user = "Borrador a verificar (texto tal como lo generó el asistente):\n\n" <> message
-      messages = [%{"role" => "user", "content" => user}]
-      enhanced = ContextBuilder.build_system_prompt(system_prompt(), context)
-      Client.chat_completion(llm_config, enhanced, messages)
-    end
+    wrapped = "Borrador a verificar (texto tal como lo generó el asistente):\n\n" <> message
+    SocratesAgents.Agents.AgentBase.default_run(__MODULE__, wrapped, context)
   end
 end

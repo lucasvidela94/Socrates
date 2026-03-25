@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Upload, Trash2, FileText, AlertCircle, Loader2, BookOpen } from "lucide-react";
-import type { MaterialRow } from "../../../../shared/types";
+import type { MaterialRow } from "@shared/types";
 
 interface MaterialsPanelProps {
   classroomId: string;
+  embedded?: boolean;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -33,7 +34,7 @@ function StatusBadge({ status }: { status: string }) {
   return null;
 }
 
-export function MaterialsPanel({ classroomId }: MaterialsPanelProps) {
+export function MaterialsPanel({ classroomId, embedded = false }: MaterialsPanelProps) {
   const [materials, setMaterials] = useState<MaterialRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -77,39 +78,56 @@ export function MaterialsPanel({ classroomId }: MaterialsPanelProps) {
     );
   }
 
+  const uploadBtn = (
+    <button
+      type="button"
+      onClick={handleUpload}
+      disabled={uploading}
+      className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {uploading ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <Upload className="w-4 h-4" />
+      )}
+      Subir archivo
+    </button>
+  );
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-muted-foreground" />
-          <h3 className="font-medium text-sm">Materiales de referencia</h3>
-          {materials.length > 0 && (
-            <span className="text-xs text-muted-foreground">
-              ({materials.length})
-            </span>
-          )}
+      {embedded ? (
+        <div className="flex justify-end">{uploadBtn}</div>
+      ) : (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <BookOpen className="w-5 h-5 shrink-0 text-muted-foreground" />
+            <h3 className="font-medium text-sm">Materiales de referencia</h3>
+            {materials.length > 0 && (
+              <span className="text-xs text-muted-foreground">({materials.length})</span>
+            )}
+          </div>
+          {uploadBtn}
         </div>
-        <button
-          onClick={handleUpload}
-          disabled={uploading}
-          className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {uploading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Upload className="w-4 h-4" />
-          )}
-          Subir archivo
-        </button>
-      </div>
+      )}
 
       {materials.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
-          <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+        <div
+          className={
+            embedded
+              ? "rounded-md border border-dashed py-6 px-3 text-center text-muted-foreground"
+              : "text-center py-8 text-muted-foreground border border-dashed rounded-lg"
+          }
+        >
+          {!embedded && <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />}
           <p className="text-sm">No hay materiales cargados</p>
-          <p className="text-xs mt-1 opacity-70">
-            Subí PDFs, documentos o archivos de texto como referencia para los agentes
-          </p>
+          {embedded ? (
+            <p className="text-xs mt-1 text-muted-foreground/80">PDF o texto para los asistentes.</p>
+          ) : (
+            <p className="text-xs mt-1 opacity-70">
+              Subí PDFs, documentos o archivos de texto como referencia para los agentes
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-2">

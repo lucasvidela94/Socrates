@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ROUTES, classroomCurriculumPath } from "@shared/lib/routes";
+import { ROUTES, classroomFeedbackPath, classroomProgramAnnualPath } from "@shared/lib/routes";
 import { useClassroomStore } from "@/stores/classroom-store";
 import type { ClassroomRow, StudentInput } from "@shared/types";
-import { ArrowLeft, BookMarked, Trash2, UserPlus, Users } from "lucide-react";
+import { ArrowLeft, BookMarked, ChevronDown, ClipboardCheck, Trash2, UserPlus, Users } from "lucide-react";
 import { MaterialsPanel } from "../../materials";
+import { StudentRosterTable } from "../components/student-roster-table";
 
 export const ClassroomDetailPage = (): ReactElement => {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -82,95 +83,94 @@ export const ClassroomDetailPage = (): ReactElement => {
   return (
     <PageContainer>
       <Breadcrumb items={crumbs} />
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Button asChild variant="ghost" size="sm">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <Button asChild variant="ghost" size="sm" className="-ml-2">
           <Link to={ROUTES.CLASSROOMS}>
             <ArrowLeft className="h-4 w-4" />
             Aulas
           </Link>
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => void handleDeleteClassroom()}>
-          <Trash2 className="h-4 w-4" />
-          Eliminar aula
-        </Button>
-      </div>
-      <PageHeader
-        title={classroom.name}
-        description={`${classroom.grade} · ${classroom.shift}`}
-      />
-
-      <Card className="max-w-xl mb-8">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Agregar alumno
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <div className="flex-1 min-w-[200px] space-y-1">
-            <Label htmlFor="sname">Nombre y apellido</Label>
-            <Input
-              id="sname"
-              value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
-              placeholder="Nombre completo"
-            />
-          </div>
-          <div className="flex items-end">
-            <Button
-              onClick={() => void handleAddStudent()}
-              disabled={saving || studentName.trim() === ""}
-            >
-              Agregar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="mb-8">
-        <CardContent className="pt-6">
-          <MaterialsPanel classroomId={classroomId} />
-        </CardContent>
-      </Card>
-
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <BookMarked className="h-4 w-4" />
-            Programa anual
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-muted-foreground flex-1 min-w-[200px]">
-            Definí materias, unidades y temas para alinear los asistentes al curso.
-          </p>
+        <span className="hidden min-[480px]:inline text-muted-foreground/50">·</span>
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
           <Button asChild variant="outline" size="sm">
-            <Link to={classroomCurriculumPath(classroomId)}>Gestionar programa</Link>
+            <Link to={classroomFeedbackPath(classroomId)}>
+              <ClipboardCheck className="h-4 w-4" />
+              Devoluciones
+            </Link>
           </Button>
-        </CardContent>
-      </Card>
+          <Button asChild variant="outline" size="sm">
+            <Link to={classroomProgramAnnualPath(classroomId)}>
+              <BookMarked className="h-4 w-4" />
+              Programa
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => void handleDeleteClassroom()}
+          >
+            <Trash2 className="h-4 w-4" />
+            Eliminar
+          </Button>
+        </div>
+      </div>
 
-      <div className="space-y-2">
-        <h2 className="text-sm font-medium flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Alumnos ({students.length})
-        </h2>
-        <ul className="divide-y rounded-md border">
-          {students.map((s) => (
-            <li key={s.id}>
-              <Link
-                className="flex items-center justify-between px-4 py-3 text-sm hover:bg-muted/50"
-                to={`${ROUTES.CLASSROOMS}/${classroomId}/students/${s.id}`}
+      <PageHeader title={classroom.name} description={`${classroom.grade} · ${classroom.shift}`} />
+
+      <div className="mt-8 space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-base font-semibold tracking-tight">
+                <span className="inline-flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  Alumnos
+                  <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+                    {students.length}
+                  </span>
+                </span>
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap items-end gap-2 border-b border-border/60 pb-4">
+              <div className="min-w-[min(100%,220px)] flex-1 space-y-1">
+                <Label htmlFor="sname" className="text-xs text-muted-foreground">
+                  Nuevo alumno
+                </Label>
+                <Input
+                  id="sname"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  placeholder="Nombre y apellido"
+                  className="h-9"
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="shrink-0"
+                onClick={() => void handleAddStudent()}
+                disabled={saving || studentName.trim() === ""}
               >
-                <span>{s.name}</span>
-                <span className="text-muted-foreground text-xs">Ficha →</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-        {students.length === 0 && (
-          <p className="text-sm text-muted-foreground">No hay alumnos en esta aula.</p>
-        )}
+                <UserPlus className="h-4 w-4" />
+                Agregar
+              </Button>
+            </div>
+            <StudentRosterTable classroomId={classroomId} students={students} />
+          </CardContent>
+        </Card>
+
+        <details className="group rounded-xl border border-border/80 bg-card/30 [&[open]_summary_svg]:rotate-180">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+            <span>Materiales para los asistentes</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+          </summary>
+          <div className="border-t border-border/60 px-4 py-4">
+            <MaterialsPanel classroomId={classroomId} embedded />
+          </div>
+        </details>
       </div>
     </PageContainer>
   );

@@ -8,7 +8,8 @@ import {
   ClipboardCheck,
   FileText,
 } from "lucide-react";
-import { ROUTES } from "@shared/lib/routes";
+import { ROUTES, classroomFeedbackPath } from "@shared/lib/routes";
+import { useClassroomStore } from "@/stores/classroom-store";
 
 import {
   Sidebar,
@@ -31,8 +32,17 @@ const navItemClass =
 export function AppSidebar(): React.ReactElement {
   const location = useLocation();
   const path = location.pathname;
+  const classroomId = useClassroomStore((s) => s.classroomId);
   const isExact = (route: string) => path === route;
-  const isUnder = (prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
+  const isMisAulasRoute =
+    path === ROUTES.CLASSROOMS ||
+    (path.startsWith(`${ROUTES.CLASSROOMS}/`) &&
+      !path.includes("/feedback") &&
+      !path.includes("/curriculum"));
+  const devolucionesHref =
+    classroomId !== "" ? classroomFeedbackPath(classroomId) : ROUTES.FEEDBACK;
+  const isDevolucionesActive =
+    path === ROUTES.FEEDBACK || path.includes("/feedback");
 
   return (
     <Sidebar collapsible="icon" variant="floating" className="z-20">
@@ -103,7 +113,7 @@ export function AppSidebar(): React.ReactElement {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={isUnder(ROUTES.CLASSROOMS)}
+                  isActive={isMisAulasRoute}
                   tooltip="Mis aulas"
                   className={navItemClass}
                 >
@@ -116,11 +126,11 @@ export function AppSidebar(): React.ReactElement {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={isExact(ROUTES.FEEDBACK)}
+                  isActive={isDevolucionesActive}
                   tooltip="Devoluciones"
                   className={navItemClass}
                 >
-                  <NavLink to={ROUTES.FEEDBACK}>
+                  <NavLink to={devolucionesHref}>
                     <ClipboardCheck className="h-4 w-4 shrink-0" />
                     <span>Devoluciones</span>
                   </NavLink>

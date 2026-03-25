@@ -79,10 +79,7 @@ export const ChatPage = (): ReactElement => {
   return (
     <PageContainer>
       <Breadcrumb items={BREADCRUMB_MAP[ROUTES.CHAT]} />
-      <PageHeader
-        title="Asistentes"
-        description="Borradores con contexto de tus aulas. Vos aprobás y guardás lo que sirve."
-      />
+      <PageHeader title="Asistentes" description="Contexto de aula · aprobá y guardá borradores." />
 
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <ChatAgentSelector value={state.agentType} onChange={handleAgentChange} />

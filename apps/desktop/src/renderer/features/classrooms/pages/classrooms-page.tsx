@@ -8,17 +8,80 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BREADCRUMB_MAP, ROUTES } from "@shared/lib/routes";
+import { Badge } from "@/components/ui/badge";
+import {
+  BREADCRUMB_MAP,
+  ROUTES,
+  classroomFeedbackPath,
+  classroomProgramAnnualPath,
+} from "@shared/lib/routes";
 import { useClassroomStore } from "@/stores/classroom-store";
 import type { ClassroomInput } from "@shared/types";
-import { Plus, School } from "lucide-react";
+import { Plus } from "lucide-react";
+import { getMondayIso } from "@/features/feedback/lib/week-default";
 
 export const ClassroomsPage = (): ReactElement => {
   const classrooms = useClassroomStore((s) => s.classrooms);
   const fetchClassrooms = useClassroomStore((s) => s.fetchClassrooms);
+  const [weekStart] = useState(() => getMondayIso());
+  const [statsByClassroom, setStatsByClassroom] = useState<
+    Record<
+      string,
+      { total: number; lista: number; borrador: number; pendiente: number; progress: number }
+    >
+  >({});
+  const [statsLoading, setStatsLoading] = useState(false);
+
   useEffect(() => {
     void fetchClassrooms();
   }, [fetchClassrooms]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadStats = async () => {
+      if (classrooms.length === 0) {
+        setStatsByClassroom({});
+        return;
+      }
+      setStatsLoading(true);
+      try {
+        const entries = await Promise.all(
+          classrooms.map(async (c) => {
+            const [students, feedback] = await Promise.all([
+              window.electronAPI.studentsListByClassroom(c.id),
+              window.electronAPI.feedbackListByWeek(c.id, weekStart),
+            ]);
+            const total = students.length;
+            const studentIds = new Set(students.map((s) => s.id));
+            let lista = 0;
+            let borrador = 0;
+            for (const row of feedback) {
+              if (!studentIds.has(row.studentId)) continue;
+              if (row.teacherApproved === true) {
+                lista++;
+                continue;
+              }
+              const hasIndicators =
+                row.indicators !== null && Object.values(row.indicators).some((v) => String(v ?? "").trim() !== "");
+              const hasText = (row.observations ?? "").trim() !== "" || (row.aiSummary ?? "").trim() !== "";
+              if (hasIndicators || hasText) borrador++;
+            }
+            const pending = Math.max(total - lista - borrador, 0);
+            const progress = total === 0 ? 0 : Math.round((lista / total) * 100);
+            return [c.id, { total, lista, borrador, pendiente: pending, progress }] as const;
+          })
+        );
+        if (cancelled) return;
+        setStatsByClassroom(Object.fromEntries(entries));
+      } finally {
+        if (!cancelled) setStatsLoading(false);
+      }
+    };
+    void loadStats();
+    return () => {
+      cancelled = true;
+    };
+  }, [classrooms, weekStart]);
 
   const [name, setName] = useState("");
   const [grade, setGrade] = useState("");
@@ -47,10 +110,7 @@ export const ClassroomsPage = (): ReactElement => {
   return (
     <PageContainer>
       <Breadcrumb items={BREADCRUMB_MAP[ROUTES.CLASSROOMS]} />
-      <PageHeader
-        title="Mis aulas"
-        description="Gestioná aulas, alumnos y perfiles para que los asistentes usen contexto real."
-      />
+      <PageHeader title="Mis aulas" description="Aulas y seguimiento por curso." />
 
       <Card className="max-w-xl mb-8">
         <CardHeader>
@@ -93,21 +153,71 @@ export const ClassroomsPage = (): ReactElement => {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {classrooms.map((c) => (
-          <Link key={c.id} to={`${ROUTES.CLASSROOMS}/${c.id}`}>
-            <Card className="h-full transition-colors hover:bg-muted/40">
-              <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
-                <School className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-base">{c.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                {c.grade} · {c.shift}
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Aulas activas</CardTitle>
+          <p className="text-xs text-muted-foreground">Semana: {weekStart}</p>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full min-w-[780px] text-sm">
+              <thead className="bg-muted/60">
+                <tr>
+                  <th className="px-4 py-2 text-left font-medium text-muted-foreground">Aula</th>
+                  <th className="px-4 py-2 text-left font-medium text-muted-foreground">Grado / turno</th>
+                  <th className="px-4 py-2 text-left font-medium text-muted-foreground">Alumnos</th>
+                  <th className="px-4 py-2 text-left font-medium text-muted-foreground">Devoluciones</th>
+                  <th className="px-4 py-2 text-right font-medium text-muted-foreground">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {classrooms.map((c) => {
+                  const stats = statsByClassroom[c.id] ?? {
+                    total: 0,
+                    lista: 0,
+                    borrador: 0,
+                    pendiente: 0,
+                    progress: 0,
+                  };
+                  return (
+                    <tr key={c.id} className="border-t">
+                      <td className="px-4 py-3 font-medium">{c.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {c.grade} · {c.shift}
+                      </td>
+                      <td className="px-4 py-3">{stats.total}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary">{stats.lista} listas</Badge>
+                          <Badge variant="outline">{stats.borrador} borrador</Badge>
+                          <Badge variant="outline">{stats.pendiente} pendiente</Badge>
+                          <span className="text-xs text-muted-foreground">{stats.progress}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2">
+                          <Button asChild size="sm" variant="ghost">
+                            <Link to={`${ROUTES.CLASSROOMS}/${c.id}`}>Ver aula</Link>
+                          </Button>
+                          <Button asChild size="sm" variant="outline">
+                            <Link to={classroomFeedbackPath(c.id, { week: weekStart })}>Devoluciones</Link>
+                          </Button>
+                          <Button asChild size="sm" variant="ghost">
+                            <Link to={classroomProgramAnnualPath(c.id)}>Programa</Link>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {statsLoading && (
+            <p className="pt-3 text-xs text-muted-foreground">Actualizando métricas de devoluciones…</p>
+          )}
+        </CardContent>
+      </Card>
 
       {classrooms.length === 0 && (
         <p className="text-sm text-muted-foreground">No hay aulas todavía. Creá la primera arriba.</p>

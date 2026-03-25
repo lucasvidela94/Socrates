@@ -7,8 +7,28 @@ export const ROUTES = {
   DOCUMENTS: "/documents",
 } as const;
 
-export const classroomCurriculumPath = (classroomId: string): string =>
+export const classroomProgramAnnualPath = (classroomId: string): string =>
   `${ROUTES.CLASSROOMS}/${classroomId}/curriculum`;
+
+export const classroomCurriculumPath = classroomProgramAnnualPath;
+
+export const classroomFeedbackPath = (
+  classroomId: string,
+  opts?: { week?: string }
+): string => {
+  const q = new URLSearchParams();
+  if (opts?.week !== undefined && opts.week !== "") q.set("week", opts.week);
+  const s = q.toString();
+  const base = `${ROUTES.CLASSROOMS}/${classroomId}/feedback`;
+  return s !== "" ? `${base}?${s}` : base;
+};
+
+export const feedbackStudentPath = (
+  classroomId: string,
+  studentId: string,
+  week: string
+): string =>
+  `${ROUTES.CLASSROOMS}/${classroomId}/feedback/students/${studentId}?week=${encodeURIComponent(week)}`;
 
 export const ROUTE_LABELS: Record<string, string> = {
   [ROUTES.HOME]: "Inicio",
