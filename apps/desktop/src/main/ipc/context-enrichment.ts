@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { curriculumAgentPayload, loadCurriculumTree } from "../curriculum/curriculum-tree";
 import { getDatabase } from "../db";
 import * as schema from "../db/schema";
 
@@ -8,15 +9,109 @@ export interface EnrichmentInput {
   classroomId?: string;
   studentIds?: string[];
   omitStudents?: boolean;
+  userMessage?: string;
 }
 
 export interface EnrichedAgentContext {
   classroom: Record<string, unknown> | null;
   students: Array<Record<string, unknown>>;
+  materials: Array<Record<string, unknown>>;
+  curriculum: Record<string, unknown> | null;
 }
 
 const FEEDBACK_LIMIT = 8;
 const NOTES_LIMIT = 12;
+const MATERIALS_TOKEN_BUDGET = 6000;
+const MATERIALS_MAX_CHUNKS = 40;
+
+const tokenizeKeywords = (message: string): string[] => {
+  return Array.from(
+    new Set(
+      message
+        .toLowerCase()
+        .split(/[^a-z0-9áéíóúñü]+/i)
+        .map((v) => v.trim())
+        .filter((v) => v.length >= 4)
+    )
+  ).slice(0, 20);
+};
+
+export const buildMaterialContext = async (
+  db: Db,
+  classroomId: string,
+  userMessage?: string
+): Promise<Array<Record<string, unknown>>> => {
+  const materials = await db
+    .select()
+    .from(schema.materials)
+    .where(
+      and(
+        eq(schema.materials.classroomId, classroomId),
+        eq(schema.materials.status, "ready")
+      )
+    )
+    .orderBy(desc(schema.materials.createdAt));
+
+  if (materials.length === 0) return [];
+
+  const materialIds = materials.map((m) => m.id);
+  const chunkRows = await db
+    .select()
+    .from(schema.materialChunks)
+    .where(inArray(schema.materialChunks.materialId, materialIds))
+    .orderBy(asc(schema.materialChunks.chunkIndex));
+
+  const keywords = userMessage ? tokenizeKeywords(userMessage) : [];
+
+  const ranked = chunkRows
+    .map((chunk) => {
+      const text = chunk.content.toLowerCase();
+      const score = keywords.reduce((acc, kw) => (text.includes(kw) ? acc + 1 : acc), 0);
+      return { chunk, score };
+    })
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.chunk.chunkIndex - b.chunk.chunkIndex;
+    });
+
+  let usedTokens = 0;
+  const selectedByMaterial = new Map<string, typeof chunkRows>();
+
+  for (const { chunk } of ranked) {
+    const tokenEstimate = chunk.tokenEstimate ?? Math.ceil(chunk.content.length / 4);
+    if (usedTokens + tokenEstimate > MATERIALS_TOKEN_BUDGET) continue;
+    usedTokens += tokenEstimate;
+    const list = selectedByMaterial.get(chunk.materialId) ?? [];
+    list.push(chunk);
+    selectedByMaterial.set(chunk.materialId, list);
+    if (Array.from(selectedByMaterial.values()).reduce((acc, chunks) => acc + chunks.length, 0) >= MATERIALS_MAX_CHUNKS) {
+      break;
+    }
+  }
+
+  const materialContext = materials
+    .map((material) => {
+      const chunks = (selectedByMaterial.get(material.id) ?? []).sort(
+        (a, b) => a.chunkIndex - b.chunkIndex
+      );
+      if (chunks.length === 0) return null;
+      return {
+        id: material.id,
+        title: material.title,
+        subject: material.subject,
+        status: material.status,
+        chunks: chunks.map((chunk) => ({
+          chunkIndex: chunk.chunkIndex,
+          content: chunk.content,
+          tokenEstimate: chunk.tokenEstimate,
+          pageNumber: chunk.pageNumber,
+        })),
+      };
+    })
+    .filter((item) => item !== null);
+
+  return materialContext as Array<Record<string, unknown>>;
+};
 
 export const buildEnrichedAgentContext = async (
   db: Db,
@@ -32,7 +127,7 @@ export const buildEnrichedAgentContext = async (
     classroomId === undefined &&
     (explicitIds === undefined || explicitIds.length === 0)
   ) {
-    return { classroom: null, students: [] };
+    return { classroom: null, students: [], materials: [], curriculum: null };
   }
 
   let classroomRow: typeof schema.classrooms.$inferSelect | null = null;
@@ -138,5 +233,16 @@ export const buildEnrichedAgentContext = async (
           shift: classroomRow.shift,
         };
 
-  return { classroom, students };
+  const materials =
+    classroomRow === null ? [] : await buildMaterialContext(db, classroomRow.id, input.userMessage);
+
+  let curriculum: Record<string, unknown> | null = null;
+  if (classroomRow !== null) {
+    const tree = await loadCurriculumTree(db, classroomRow.id);
+    if (tree !== null) {
+      curriculum = curriculumAgentPayload(tree);
+    }
+  }
+
+  return { classroom, students, materials, curriculum };
 };
