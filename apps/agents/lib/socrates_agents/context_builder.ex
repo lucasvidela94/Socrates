@@ -202,8 +202,7 @@ defmodule SocratesAgents.ContextBuilder do
 
   defp quality_rules(context) do
     grade =
-      context
-      |> Map.get("classroom", %{})
+      (Map.get(context, "classroom") || %{})
       |> Map.get("grade", "el grado del aula")
 
     curriculum_line =
